@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "emacs-swift-module",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SavchenkoValeriy/emacs-swift-module.git",
+      "state" : {
+        "revision" : "f722ecc88682cc05eeb410e6f0620716f350517a",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}
