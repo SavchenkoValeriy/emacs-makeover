@@ -9,6 +9,7 @@ let package = Package(
   products: [
     .library(
       name: "Makeover",
+      type: .dynamic,
       targets: ["EmacsMakeover"]),
   ],
   dependencies: [
