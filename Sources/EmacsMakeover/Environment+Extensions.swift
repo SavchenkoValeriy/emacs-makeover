@@ -14,11 +14,12 @@ extension Environment {
     let frames: [EmacsValue] = try funcall("vconcat", with: funcall("ns-frame-list-z-order"))
     let selectedId = try frameId(funcall("selected-frame"))
     let frameIds = try frames.map { try frameId($0) }
-    for (window, frameId) in zip(NSApp.orderedWindows.reversed(), frameIds) {
-      if frameId == selectedId {
-        return window
-      }
+
+    if NSApp.orderedWindows.count != frames.count {
+      throw EmacsError.customError(message: "Unexpected number of frames")
     }
-    return nil
+
+    return zip(NSApp.orderedWindows.reversed(), frameIds)
+      .first { $0.1 == selectedId }?.0
   }
 }
