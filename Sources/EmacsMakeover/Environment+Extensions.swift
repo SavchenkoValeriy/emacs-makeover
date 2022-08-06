@@ -45,7 +45,8 @@ extension Environment {
       // Should we return this when we don't have a screen?
       return internalPoint
     }
-    return NSMakePoint(internalPoint.x, screen.frame.size.height - internalPoint.y)
+    let lineHeight: Int = try funcall("line-pixel-height")
+    return NSMakePoint(internalPoint.x, screen.frame.size.height - internalPoint.y - CGFloat(lineHeight))
   }
 
   public func windowRect() throws -> NSRect {
