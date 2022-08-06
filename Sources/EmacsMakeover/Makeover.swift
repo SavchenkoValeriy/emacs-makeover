@@ -3,7 +3,7 @@ import Cocoa
 import SwiftUI
 import class EmacsSwiftModule.Environment
 
-extension NSViewController: OpaquelyEmacsConvertible {}
+extension NSView: OpaquelyEmacsConvertible {}
 
 struct MyButton: View {
   let callback: () -> Void
@@ -40,24 +40,23 @@ public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
     let channel = try env.openChannel(name: "UI")
     try env.defun("makeover-add-button") {
       (env: Environment,
-       callback: PersistentEmacsValue) throws -> NSViewController? in
+       callback: PersistentEmacsValue) throws -> NSView? in
       guard let window = try env.window() else {
         return nil
       }
-      let newController = NSHostingController(rootView: MyButton(channel.callback(callback)))
+      let newView = NSHostingView(rootView: MyButton(channel.callback(callback)))
       if let view = window.contentView {
-        view.addSubview(newController.view)
+        view.addSubview(newView)
         let point = try window.convertPoint(fromScreen: env.point())
-        newController.view.frame = NSMakeRect(point.x, point.y, 0, 0)
+        newView.frame = NSMakeRect(point.x, point.y, 0, 0)
       } else {
         return nil
       }
-      return newController
+      return newView
     }
     try env.defun("makeover-remove-button") {
-      (button: NSViewController) in
-      button.removeFromParent()
-      button.view.removeFromSuperview()
+      (button: NSView) in
+      button.removeFromSuperview()
     }
   } catch {
     return 1
