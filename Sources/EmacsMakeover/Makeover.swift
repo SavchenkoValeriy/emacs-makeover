@@ -42,14 +42,15 @@ public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
     let channel = try env.openChannel(name: "UI")
     try env.defun("makeover-add-button") {
       (env: Environment,
-       callback: PersistentEmacsValue) throws -> NSView? in
+       callback: PersistentEmacsValue,
+       location: EmacsValue?) throws -> NSView? in
       guard let window = try env.window() else {
         return nil
       }
       let newView = NSHostingView(rootView: MyButton(channel.callback(callback)))
       if let view = window.contentView {
         view.addSubview(newView)
-        let point = try window.convertPoint(fromScreen: env.point())
+        let point = try window.convertPoint(fromScreen: env.point(from: location))
         newView.frame = NSMakeRect(point.x, point.y, 50, try env.lineHeight())
       } else {
         return nil

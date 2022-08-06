@@ -39,8 +39,8 @@ extension Environment {
     throw EmacsError.customError(message: "window-id should be a number")
   }
 
-  public func point() throws -> NSPoint {
-    let internalPoint: NSPoint = try funcall("window-absolute-pixel-position")
+  public func point(from position: EmacsValue? = nil) throws -> NSPoint {
+    let internalPoint: NSPoint = try funcall("window-absolute-pixel-position", with: position)
     guard let screen = try window()?.screen else {
       // Should we return this when we don't have a screen?
       return internalPoint
