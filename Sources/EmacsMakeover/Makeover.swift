@@ -12,8 +12,10 @@ struct MyButton: View {
   }
 
   var body: some View {
-    Button("OK", action: callback)
-      .frame(width: 100.0)
+    GeometryReader { geometry in
+      Button("OK", action: callback)
+        .frame(width: geometry.size.width, height: geometry.size.height)
+    }
   }
 }
 
@@ -48,7 +50,7 @@ public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
       if let view = window.contentView {
         view.addSubview(newView)
         let point = try window.convertPoint(fromScreen: env.point())
-        newView.frame = NSMakeRect(point.x, point.y, 0, 0)
+        newView.frame = NSMakeRect(point.x, point.y, 50, try env.lineHeight())
       } else {
         return nil
       }
