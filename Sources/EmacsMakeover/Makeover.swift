@@ -47,10 +47,13 @@ public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
       guard let window = try env.window() else {
         return nil
       }
+      guard let point = try env.point(from: location) else {
+        return nil
+      }
       let newView = NSHostingView(rootView: MyButton(channel.callback(callback)))
       if let view = window.contentView {
         view.addSubview(newView)
-        let point = try window.convertPoint(fromScreen: env.point(from: location))
+        let point = window.convertPoint(fromScreen: point)
         newView.frame = NSMakeRect(point.x, point.y, 50, try env.lineHeight())
       } else {
         return nil

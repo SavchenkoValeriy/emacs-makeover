@@ -13,11 +13,17 @@ let package = Package(
       targets: ["EmacsMakeover"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/SavchenkoValeriy/emacs-swift-module.git", from: "1.0.0"),
+    .package(url: "https://github.com/SavchenkoValeriy/emacs-swift-module.git", from: "1.1.0"),
   ],
   targets: [
     .target(
       name: "EmacsMakeover",
       dependencies: [.product(name: "EmacsSwiftModule", package: "emacs-swift-module")]),
+    .testTarget(
+      name: "MakeoverTests",
+      dependencies: [
+        "EmacsMakeover",
+        .product(name: "EmacsSwiftModule", package: "emacs-swift-module")
+      ]),
   ]
 )

@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SavchenkoValeriy/emacs-swift-module.git",
       "state" : {
-        "revision" : "f722ecc88682cc05eeb410e6f0620716f350517a",
-        "version" : "1.0.0"
+        "revision" : "864eb4d23417e574ad2395843735b3027b0267d6",
+        "version" : "1.1.0"
       }
     }
   ],

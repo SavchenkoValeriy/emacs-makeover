@@ -3,13 +3,12 @@ import Cocoa
 
 extension NSPoint: EmacsConvertible {
   public func convert(within env: Environment) throws -> EmacsValue {
-    try env.funcall("cons", with: Int(x), Int(y))
+    try ConsCell(car: Int(x), cdr: Int(y)).convert(within: env)
   }
 
-  public static func convert(from: EmacsValue, within env: Environment) throws -> CGPoint {
-    let x: Int = try env.funcall("car", with: from)
-    let y: Int = try env.funcall("cdr", with: from)
-    return NSMakePoint(CGFloat(x), CGFloat(y))
+  public static func convert(from value: EmacsValue, within env: Environment) throws -> CGPoint {
+    let cons = try ConsCell<Int, Int>.convert(from: value, within: env)
+    return NSMakePoint(CGFloat(cons.car), CGFloat(cons.cdr))
   }
 }
 
@@ -18,14 +17,8 @@ extension NSRect: EmacsConvertible {
     try env.funcall("list", with: Int(minX), Int(minY), Int(maxX), Int(maxY))
   }
 
-  public static func convert(from: EmacsValue, within env: Environment) throws -> CGRect {
-    var points = [CGFloat]()
-    var list = from
-    for _ in 0..<4 {
-      let car: Int = try env.funcall("car", with: list)
-      points.append(CGFloat(car))
-      list = try env.funcall("cdr", with: list)
-    }
+  public static func convert(from value: EmacsValue, within env: Environment) throws -> CGRect {
+    let points = try List<Int>.convert(from: value, within: env).map { CGFloat($0) }
     return NSRect(x: points[0], y: points[1], width: points[2] - points[0], height: points[3] - points[1])
   }
 }
@@ -39,13 +32,16 @@ extension Environment {
     throw EmacsError.customError(message: "window-id should be a number")
   }
 
-  public func point(from position: EmacsValue? = nil) throws -> NSPoint {
-    let internalPoint: NSPoint = try funcall("window-absolute-pixel-position", with: position)
+  public func point(from position: EmacsValue? = nil) throws -> NSPoint? {
+    let internalPoint: NSPoint? = try funcall("window-absolute-pixel-position", with: position)
     guard let screen = try window()?.screen else {
       // Should we return this when we don't have a screen?
       return internalPoint
     }
-    return try NSMakePoint(internalPoint.x, screen.frame.size.height - internalPoint.y - lineHeight())
+    guard let point = internalPoint else {
+      return nil
+    }
+    return try NSMakePoint(point.x, screen.frame.size.height - point.y - lineHeight())
   }
 
   public func lineHeight() throws -> CGFloat {
