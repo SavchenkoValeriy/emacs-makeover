@@ -5,67 +5,48 @@ import class EmacsSwiftModule.Environment
 
 extension NSView: OpaquelyEmacsConvertible {}
 
-struct MyButton: View {
-  let callback: () -> Void
-  init(_ callback: @escaping () -> Void) {
-    self.callback = callback
+class MakeoverView: OpaquelyEmacsConvertible {
+  public let view: NSView
+  var removed = false
+
+  public func remove() {
+    _ = Unmanaged.passRetained(view)
+    view.removeFromSuperview()
+    removed = true
   }
 
-  var body: some View {
-    GeometryReader { geometry in
-      Button("OK", action: callback)
-        .frame(width: geometry.size.width, height: geometry.size.height)
+  fileprivate init(view: NSView) {
+    self.view = view
+  }
+
+  deinit {
+    if removed {
+      Unmanaged.passUnretained(view).release()
     }
   }
 }
 
-@_cdecl("plugin_is_GPL_compatible")
-public func isGPLCompatible() {}
+class MakeoverController {
+  func addViewAtPoint<T: View>(_ toAdd: T, within env: Environment, `where` location: EmacsValue? = nil) throws -> MakeoverView? {
+    guard let window = try env.window(),
+          let screenPoint = try env.point(from: location),
+          let view = window.contentView else {
+      return nil
+    }
 
-@_cdecl("emacs_module_init")
-public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
-  let env = Environment(from: runtimePtr)
-  do {
-    try env.funcall("message", with: "Hello, Emacs!")
-    try env.defun("makeover-numer-of-windows") {
-      NSApp.windows.map { $0.windowNumber }
-    }
-    try env.defun("makeover-current-window") {
-      (env: Environment) throws -> Int in
-      let window = try env.window()
-      return window?.windowNumber ?? 0
-    }
-    try env.defun("makeover-current-position") {
-      (env: Environment) throws in
-      try env.funcall("message", with: "%S", env.point())
-    }
-    let channel = try env.openChannel(name: "UI")
-    try env.defun("makeover-add-button") {
-      (env: Environment,
-       callback: PersistentEmacsValue,
-       location: EmacsValue?) throws -> NSView? in
-      guard let window = try env.window() else {
-        return nil
-      }
-      guard let point = try env.point(from: location) else {
-        return nil
-      }
-      let newView = NSHostingView(rootView: MyButton(channel.callback(callback)))
-      if let view = window.contentView {
-        view.addSubview(newView)
-        let point = window.convertPoint(fromScreen: point)
-        newView.frame = NSMakeRect(point.x, point.y, 50, try env.lineHeight())
-      } else {
-        return nil
-      }
-      return newView
-    }
-    try env.defun("makeover-remove-button") {
-      (button: NSView) in
-      button.removeFromSuperview()
-    }
-  } catch {
-    return 1
+    let point = window.convertPoint(fromScreen: screenPoint)
+    let result = NSHostingView(rootView: toAdd)
+
+    view.addSubview(result)
+
+    // Customize positioning
+    result.translatesAutoresizingMaskIntoConstraints = false
+    result.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -point.y).isActive = true
+    result.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: point.x).isActive = true
+
+    return MakeoverView(view: result)
   }
-  return 0
+  func removeView(_ view: MakeoverView) {
+    view.remove()
+  }
 }
