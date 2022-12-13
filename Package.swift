@@ -32,13 +32,15 @@ if let platformDir = platformDir {
       name: "MakeoverTests",
       dependencies: [
         "EmacsMakeover",
-        .product(name: "EmacsSwiftModule", package: "emacs-swift-module")
+        .product(name: "EmacsSwiftModule", package: "emacs-swift-module"),
+        .product(name: "ModuleFactoryPlugin", package: "emacs-swift-module")
       ],
       path: "Test/MakeoverTests",
       linkerSettings: [.linkedFramework("XCTest"),
                        .unsafeFlags(
                          ["-Xlinker", "-rpath", "-Xlinker", "\(platformDir)/Developer/usr/lib",
-                          "-Xlinker", "-rpath", "-Xlinker", "\(platformDir)/Developer/Library/Frameworks"])]
+                          "-Xlinker", "-rpath", "-Xlinker", "\(platformDir)/Developer/Library/Frameworks"])],
+      plugins: ["ModuleFactoryPlugin"]
     )
   )
 }
@@ -48,7 +50,7 @@ let package = Package(
   platforms: [.macOS(.v11)],
   products: products,
   dependencies: [
-    .package(url: "https://github.com/SavchenkoValeriy/emacs-swift-module.git", from: "1.1.0"),
+    .package(url: "https://github.com/SavchenkoValeriy/emacs-swift-module.git", from: "1.3.0"),
   ],
   targets: targets
 )

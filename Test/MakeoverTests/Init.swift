@@ -3,9 +3,6 @@ import class EmacsSwiftModule.Environment
 import XCTest
 import SwiftUI
 
-@_cdecl("plugin_is_GPL_compatible")
-public func isGPLCompatible() {}
-
 fileprivate func run(_ test: XCTest, with env: Environment) -> Bool {
   var failed = false
   switch test {
@@ -26,17 +23,14 @@ fileprivate func run(_ test: XCTest, with env: Environment) -> Bool {
   return failed
 }
 
-@_cdecl("emacs_module_init")
-public func Init(_ runtimePtr: RuntimePointer) -> Int32 {
-  let env = Environment(from: runtimePtr)
-  do {
+class MakeoverTestsModule: Module {
+  let isGPLCompatible = true
+  func Init(_ env: Environment) throws {
     try env.defun("makeover:run-swift-tests") {
       (env: Environment) -> Bool in
-      try env.funcall("message", with: "Hello from Swift tests!")
-      return run(XCTestSuite.default, with: env)
+      run(XCTestSuite.default, with: env)
     }
-  } catch {
-    return 1
   }
-  return 0
 }
+
+func createModule() -> Module { MakeoverTestsModule() }
