@@ -1,0 +1,15 @@
+(defun playground--module-reload (module)
+  (interactive "fReload Module file: ")
+  (let ((tmpfile (make-temp-file
+                  (file-name-nondirectory module) nil module-file-suffix)))
+    (copy-file module tmpfile t)
+    (module-load tmpfile)))
+
+(defun playground:run ()
+  (interactive)
+  (let* ((root (projectile-project-root))
+         (dylib (f-join root ".build" "debug" "libPlayground.dylib"))
+         (default-directory root)
+         (buffer (get-buffer-create "*playground-compilation*")))
+    (call-process-shell-command "swift build --product Playground" nil buffer t)
+    (playground--module-reload dylib)))

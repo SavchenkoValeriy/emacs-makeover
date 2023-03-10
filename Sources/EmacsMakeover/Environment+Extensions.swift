@@ -32,7 +32,11 @@ extension Environment {
     throw EmacsError.customError(message: "window-id should be a number")
   }
 
-  public func point(from position: EmacsValue? = nil) throws -> NSPoint? {
+  public func point() throws -> EmacsValue {
+    try funcall("point")
+  }
+
+  public func position(from position: EmacsValue? = nil) throws -> NSPoint? {
     let internalPoint: NSPoint? = try funcall("window-absolute-pixel-position", with: position)
     guard let screen = try window()?.screen else {
       // Should we return this when we don't have a screen?
@@ -52,12 +56,18 @@ extension Environment {
     try funcall("window-absolute-pixel-edges")
   }
 
-  public func window() throws -> NSWindow? {
+  public func window(_ frame: EmacsValue? = nil) throws -> NSWindow? {
+    let frame = try frame ?? funcall("selected-frame")
     let frames: [EmacsValue] = try funcall("vconcat", with: funcall("ns-frame-list-z-order"))
-    let selectedId = try frameId(funcall("selected-frame"))
+    let selectedId = try frameId(frame)
     let frameIds = try frames.map { try frameId($0) }
 
-    if NSApp.orderedWindows.count != frames.count {
+    let windows = NSApp.orderedWindows.filter {
+      win in
+      win.delegate.map { String(describing: $0).contains("EmacsView") } ?? false
+    }
+
+    if windows.count != frames.count {
       throw EmacsError.customError(message: "Unexpected number of frames")
     }
 

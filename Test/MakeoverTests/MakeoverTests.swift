@@ -30,7 +30,7 @@ final class ButtonTest: XCTestCase, MakeoverTestCase {
 
   @MainActor
   public func testButtonAddition() throws {
-    let controller = MakeoverController()
+    let controller = try MakeoverController(env)
 
     let channel = try env.openChannel(name: "UI")
     let callback = try env.preserve(env.defun { XCTAssert(false) })
@@ -40,7 +40,7 @@ final class ButtonTest: XCTestCase, MakeoverTestCase {
     XCTAssert(buttonView != nil)
 
     guard let window = try env.window(),
-          let cursor = try env.point() else {
+          let cursor = try env.position() else {
       XCTAssert(false)
       return
     }

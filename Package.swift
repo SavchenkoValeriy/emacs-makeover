@@ -21,27 +21,39 @@ var targets: [Target] = [
 ]
 
 if let platformDir = platformDir {
-  products.append(
-    .library(
-      name: "MakeoverTests",
-      type: .dynamic,
-      targets: ["MakeoverTests"])
+  products.append(contentsOf: [
+      .library(
+        name: "MakeoverTests",
+        type: .dynamic,
+        targets: ["MakeoverTests"]),
+      .library(
+        name: "Playground",
+        type: .dynamic,
+        targets: ["Playground"]
+      )]
   )
-  targets.append(
+  targets.append(contentsOf: [
     .target(
       name: "MakeoverTests",
       dependencies: [
         "EmacsMakeover",
         .product(name: "EmacsSwiftModule", package: "emacs-swift-module"),
-        .product(name: "ModuleFactoryPlugin", package: "emacs-swift-module")
       ],
       path: "Test/MakeoverTests",
       linkerSettings: [.linkedFramework("XCTest"),
                        .unsafeFlags(
                          ["-Xlinker", "-rpath", "-Xlinker", "\(platformDir)/Developer/usr/lib",
                           "-Xlinker", "-rpath", "-Xlinker", "\(platformDir)/Developer/Library/Frameworks"])],
-      plugins: ["ModuleFactoryPlugin"]
-    )
+      plugins: [.plugin(name: "ModuleFactoryPlugin", package: "emacs-swift-module")]
+    ),
+    .target(
+      name: "Playground",
+      dependencies: [
+        "EmacsMakeover",
+        .product(name: "EmacsSwiftModule", package: "emacs-swift-module"),
+      ],
+      plugins: [.plugin(name: "ModuleFactoryPlugin", package: "emacs-swift-module")]
+    )]
   )
 }
 
