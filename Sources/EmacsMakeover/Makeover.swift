@@ -68,9 +68,9 @@ class MakeoverBufferView: MakeoverView {
 
     let buffer: PersistentEmacsValue = try env.funcall("current-buffer")
 
-    let onScroll = try env.preserve(
+    let update = try env.preserve(
       env.defun {
-        (env: Environment, emacsWindow: EmacsValue, _: EmacsValue) throws in
+        (env: Environment, emacsWindow: EmacsValue) throws in
         // Emacs window is not an actual window, we need to get a frame from it.
         let frame = try env.funcall("window-frame", with: emacsWindow)
         guard let window = try env.window(frame) else {
@@ -86,9 +86,27 @@ class MakeoverBufferView: MakeoverView {
         view.isHidden = false
         try self.position(at: point)
       })
+
+    let onScroll = try env.preserve(
+      env.defun {
+        (env: Environment, emacsWindow: EmacsValue, _: EmacsValue) throws in
+        try env.funcall(update, with: emacsWindow)
+      })
+    let onResize = try env.preserve(
+      env.defun {
+        (env: Environment, emacsWindowOrFrame: EmacsValue) throws in
+        guard try env.funcall("framep", with: emacsWindowOrFrame) as Bool else {
+          return
+        }
+        try env.funcall(update, with: emacsWindowOrFrame)
+      }
+    )
+
     let windowScrollFunctions: PersistentEmacsValue = try env.funcall("make-local-variable",
                                                 with: Symbol(name: "window-scroll-functions"))
     try env.funcall("add-to-list", with: windowScrollFunctions, onScroll)
+    let windowSizeChangeFunctions = Symbol(name: "window-size-change-functions")
+    try env.funcall("add-to-list", with: windowSizeChangeFunctions, onResize)
 
     onRemove = channel.callback {
       env throws in
@@ -101,6 +119,10 @@ class MakeoverBufferView: MakeoverView {
       let scrollFunctions = try env.funcall("symbol-value", with: windowScrollFunctions)
       let newScrollFunctions = try env.funcall("remq", with: onScroll, scrollFunctions)
       try env.funcall("set", with: windowScrollFunctions, newScrollFunctions)
+
+      let resizeFunctions = try env.funcall("symbol-value", with: windowSizeChangeFunctions)
+      let newResizeFunctions = try env.funcall("remq", with: onResize, resizeFunctions)
+      try env.funcall("set", with: windowSizeChangeFunctions, newResizeFunctions)
     }
   }
 
