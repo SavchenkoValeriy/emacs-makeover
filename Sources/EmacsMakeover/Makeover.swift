@@ -155,10 +155,16 @@ public class MakeoverController {
 
     view.addSubview(actualView)
 
-    let result = try MakeoverBufferView(view: actualView,
-                                        point: bufferPoint,
-                                        within: env,
-                                        channel: channel)
+    let result: MakeoverView
+
+    if adaptive {
+      result = try MakeoverBufferView(view: actualView,
+                                      point: bufferPoint,
+                                      within: env,
+                                      channel: channel)
+    } else {
+      result = MakeoverView(view: actualView)
+    }
     // Temporary debugging solution
     result.message = channel.callback {
       env, message in try! env.funcall("message", with: message)
